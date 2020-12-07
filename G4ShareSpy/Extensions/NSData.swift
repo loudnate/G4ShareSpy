@@ -10,63 +10,55 @@ import Foundation
 
 
 public extension Data {
-    /*@nonobjc subscript(index: Int) -> Int8 {
-     let bytes: [Int8] = self[index...index]
-
-     return bytes[0]
-     }
-
-     @nonobjc subscript(index: Int) -> UInt8 {
-     let bytes: [UInt8] = self[index...index]
-
-     return bytes[0]
-     }
-     */
     @nonobjc subscript(range: Range<Int>) -> UInt16 {
-        var dataArray: UInt16 = 0
-        let buffer = UnsafeMutableBufferPointer(start: &dataArray, count: range.count)
-        _ = self.copyBytes(to: buffer, from: range)
-
-        return dataArray
+        subdata(in: range).toInt()
     }
 
     @nonobjc subscript(range: Range<Int>) -> UInt32 {
-        var dataArray: UInt32 = 0
-        let buffer = UnsafeMutableBufferPointer(start: &dataArray, count: range.count)
-        _ = self.copyBytes(to: buffer, from: range)
-
-        return dataArray
+        subdata(in: range).toInt()
     }
-    /*
-     subscript(range: Range<Int>) -> [Int8] {
-     var dataArray = [Int8](repeating: 0, count: range.count)
-     let buffer = UnsafeMutableBufferPointer(start: &dataArray, count: range.count)
-     _ = self.copyBytes(to: buffer, from: range)
+}
 
-     return dataArray
-     }
+extension Data {
+    private func toDefaultEndian<T: FixedWidthInteger>(_: T.Type) -> T {
+        return self.withUnsafeBytes({ (rawBufferPointer: UnsafeRawBufferPointer) -> T in
+            let bufferPointer = rawBufferPointer.bindMemory(to: T.self)
+            guard let pointer = bufferPointer.baseAddress else {
+                return 0
+            }
+            return T(pointer.pointee)
+        })
+    }
 
-     subscript(range: Range<Int>) -> [UInt8] {
-     var dataArray = [UInt8](repeating: 0, count: range.count)
-     self.copyBytes(to: &dataArray, from: range)
+    func to<T: FixedWidthInteger>(_ type: T.Type) -> T {
+        return T(littleEndian: toDefaultEndian(type))
+    }
 
-     return dataArray
-     }
+    func toInt<T: FixedWidthInteger>() -> T {
+        return to(T.self)
+    }
 
-     subscript(range: Range<Int>) -> [UInt16] {
-     var dataArray = [UInt16](repeating: 0, count: range.count / 2)
-     let buffer = UnsafeMutableBufferPointer(start: &dataArray, count: range.count)
-     _ = self.copyBytes(to: buffer, from: range)
+    func toBigEndian<T: FixedWidthInteger>(_ type: T.Type) -> T {
+        return T(bigEndian: toDefaultEndian(type))
+    }
 
-     return dataArray
-     }
+    mutating func append<T: FixedWidthInteger>(_ newElement: T) {
+        var element = newElement.littleEndian
+        append(Data(bytes: &element, count: element.bitWidth / 8))
+    }
 
-     subscript(range: Range<Int>) -> [UInt32] {
-     var dataArray = [UInt32](repeating: 0, count: range.count / 4)
-     let buffer = UnsafeMutableBufferPointer(start: &dataArray, count: range.count)
-     _ = self.copyBytes(to: buffer, from: range)
+    mutating func appendBigEndian<T: FixedWidthInteger>(_ newElement: T) {
+        var element = newElement.bigEndian
+        append(Data(bytes: &element, count: element.bitWidth / 8))
+    }
 
-     return dataArray
-     }
-     */
+    init<T: FixedWidthInteger>(_ value: T) {
+        var value = value.littleEndian
+        self.init(bytes: &value, count: value.bitWidth / 8)
+    }
+
+    init<T: FixedWidthInteger>(bigEndian value: T) {
+        var value = value.bigEndian
+        self.init(bytes: &value, count: value.bitWidth / 8)
+    }
 }
