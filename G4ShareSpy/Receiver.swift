@@ -8,7 +8,7 @@
 
 import Foundation
 
-public protocol ReceiverDelegate: class {
+public protocol ReceiverDelegate: AnyObject {
     func receiver(_ receiver: Receiver, didReadGlucoseHistory glucoseHistory: [GlucoseG4])
 
     func receiver(_ receiver: Receiver, didError error: Error)

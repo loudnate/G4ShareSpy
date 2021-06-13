@@ -16,7 +16,7 @@ public enum BluetoothManagerError: Error {
     case failedToFindConnectedReceiver
 }
 
-protocol BluetoothManagerDelegate: class {
+protocol BluetoothManagerDelegate: AnyObject {
 
     /**
      Tells the delegate that the bluetooth manager has finished connecting to and discovering all required services of its peripheral
